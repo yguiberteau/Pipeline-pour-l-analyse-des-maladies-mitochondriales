@@ -1,0 +1,6 @@
+export PATH="/Users/mallorylecorre/Desktop/gatk-4.4.0.0:$PATH"
+gatk Mutect2 \
+-R "/Users/mallorylecorre/Desktop/ProjetProg/fichierFASTA.fasta" \
+-I "/Users/mallorylecorre/Desktop/Projet Programmation/IonXpress_011.bam" \
+-O "/Users/mallorylecorre/Desktop/Projet/output.vcf" \
+--mitochondria-mode
