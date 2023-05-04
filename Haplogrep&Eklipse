@@ -12,6 +12,15 @@ unzip haplogrep3-3.2.1-linux.zip #unzip le zip
 
 ./haplogrep3 classify
 
+./haplogrep3 classify --in=TSVC_variants_IonXpress_011.vcf.gz --tree=phylotree-fu-rcrs@1.2  --out=haplogroup.txt # Execution d'haplogrep sur notre fichier test
+
+#Le resultat est écrit dans le fichier du nom sortie en output
+Remarque: j'ai pris le premier arbre que j'ai vu donc à voir si un est plus approprié 
+
+
+
+
+
 #Execution eKLIPse
 
 sudo apt install python2
