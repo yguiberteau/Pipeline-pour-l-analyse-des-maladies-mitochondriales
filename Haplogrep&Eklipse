@@ -25,6 +25,8 @@ Remarque: j'ai pris le premier arbre que j'ai vu donc à voir si un est plus app
 
 sudo apt install python2
 
+sudo apt install circos
+
 pip install biopython #install biopython
 
 pip install tqdm #install tqdm
