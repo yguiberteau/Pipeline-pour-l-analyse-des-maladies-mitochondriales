@@ -1,0 +1,26 @@
+FROM ubuntu:18.04
+
+# Installation des dépendances nécessaires
+RUN apt-get update && apt-get install -y \
+    bwa \
+    samtools \
+    default-jre \
+    wget \
+    unzip \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Installation de GATK
+RUN wget https://github.com/broadinstitute/gatk/releases/download/4.2.0.0/gatk-4.2.0.0.zip \
+    && unzip gatk-4.2.0.0.zip \
+    && export PATH=$PATH:/gatk-4.2.0.0 \
+    && rm gatk-4.2.0.0.zip
+
+# Installation de MultiQC
+RUN pip3 install multiqc
+
+# Copie du script dans l'image
+COPY pipeline.sh /
+
+# Définition du point d'entrée
+ENTRYPOINT ["/pipeline.sh"]
