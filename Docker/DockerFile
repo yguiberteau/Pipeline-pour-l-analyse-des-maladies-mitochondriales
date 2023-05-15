@@ -1,0 +1,41 @@
+FROM ubuntu:latest
+
+# Installation dépendances VEP
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    perl \
+    cpanminus \
+    build-essential \
+    libmysqlclient-dev \
+    libpng-dev \
+    zlib1g-dev
+
+# Installation VEP
+WORKDIR /vep
+RUN cpanm Archive::Zip DBI DBD::mysql Set::IntervalTree JSON Module::Build
+
+RUN wget -q https://github.com/Ensembl/ensembl-vep/archive/refs/tags/104.0.tar.gz && \
+    tar -zxvf 104.0.tar.gz && \
+    rm 104.0.tar.gz && \
+    mv ensembl-vep-104.0 vep
+
+WORKDIR /gatk
+RUN wget https://github.com/broadinstitute/gatk/releases/download/4.2.0.0/gatk-4.2.0.0.zip && \
+    unzip gatk-4.2.0.0.zip && \
+    rm gatk-4.2.0.0.zip
+
+RUN apt-get install -y \
+    bwa \
+    samtools \
+    python3-pip
+
+COPY REF.fasta /data/reference.fasta
+
+COPY sorted.bam /data/input.bam
+
+WORKDIR /scripts
+RUN apt-get install -y git && \
+    git clone https://github.com/yguiberteau/Pipeline-pour-l-analyse-des-maladies-mitochondriales.git
+
+CMD ["python3", "/scripts/variant_call.py"]
