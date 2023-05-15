@@ -1,12 +1,27 @@
-#!/bin/bash
+#!/usr/bin/env python3
+import os
 
+GATK = "/gatk/gatk-4.2.0.0/gatk"
 
-export PATH="/home/parallels/Desktop/ProjetProgrammation/gatk-4.2.0.0:$PATH"
+FichierBam = "/data/input.bam"
 
-gatk Mutect2 \
+fichierFastaReference = "/Users/mallorylecorre/Desktop/ProjetProg/REF.fasta"
 
--R "/home/parallels/Desktop/ProjetProgrammation/IonXpress_011.fasta" \ \
+# Chemin de sortie pour le fichier VCF
+outputFichierVcf = "/data/output.vcf"
 
---mitochondria \
--I "/home/parallels/Desktop/ProjetProgrammation/IonXpress_011.bam"\
--O mitochondria.vcf.gz
+cmd = f"{GATK} HaplotypeCaller " \
+      f"-R {fichierFastaReference} " \
+      f"-I {FichierBam} " \
+      f"-O {outputFichierVcf} " \
+      "--emit-ref-confidence GVCF " \
+      "--stand-call-conf 20 " \
+      "--read-filter MappingQualityReadFilter " \
+      "--filter-mapping-quality 30 " \
+      "--filter-expression \"QUAL < 30.0\" " \
+      "--filter-name \"LowQual\" " \
+      "--dbsnp /path/to/dbSNP.vcf " \
+      "--mitochondria-mode " \
+      "--interval-padding 100"
+
+os.system(cmd)
