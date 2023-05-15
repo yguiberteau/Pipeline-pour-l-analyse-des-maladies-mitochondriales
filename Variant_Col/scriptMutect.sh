@@ -3,7 +3,7 @@ import os
 
 GATK = "/gatk/gatk-4.2.0.0/gatk"
 
-FichierBam = "/data/input.bam"
+FichierBam = "/data/sorted.bam"
 
 fichierFastaReference = "/data/REF.fasta"
 
