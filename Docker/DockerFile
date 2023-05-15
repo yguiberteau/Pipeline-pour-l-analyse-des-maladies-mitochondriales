@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 
-# Installation dépendances VEP
+# Installation des dépendances pour VEP
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
@@ -30,9 +30,9 @@ RUN apt-get install -y \
     samtools \
     python3-pip
 
-COPY REF.fasta /data/reference.fasta
+COPY REF.fasta /Users/mallorylecorre/Desktop/ProjetProg/REF.fasta
 
-COPY sorted.bam /data/input.bam
+COPY sorted.bam /Users/mallorylecorre/Desktop/ProjetProg/sorted.bam
 
 WORKDIR /scripts
 RUN apt-get install -y git && \
