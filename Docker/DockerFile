@@ -1,41 +1,57 @@
+# Utilisation d'une image de base
 FROM ubuntu:latest
 
-# Installation des dépendances pour VEP
-RUN apt-get update && apt-get install -y \
-    wget \
-    unzip \
-    perl \
-    cpanminus \
-    build-essential \
-    libmysqlclient-dev \
-    libpng-dev \
-    zlib1g-dev
+RUN apt-get update && apt-get install --no-install-recommends -y \
+ libncurses5-dev \
+ libbz2-dev \
+ liblzma-dev \
+ libcurl4-gnutls-dev \
+ zlib1g-dev \
+ libssl-dev \
+ gcc \
+ wget \
+ make \
+ perl \
+ bzip2 \
+ gnuplot \
+ ca-certificates \
+ gawk && \
+ apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
-# Installation VEP
-WORKDIR /vep
-RUN cpanm Archive::Zip DBI DBD::mysql Set::IntervalTree JSON Module::Build
+# install samtools, make /data
+ARG SAMTOOLSVER=1.13
 
-RUN wget -q https://github.com/Ensembl/ensembl-vep/archive/refs/tags/104.0.tar.gz && \
-    tar -zxvf 104.0.tar.gz && \
-    rm 104.0.tar.gz && \
-    mv ensembl-vep-104.0 vep
+RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLSVER}/samtools-${SAMTOOLSVER}.tar.bz2 && \
+    tar -xjf samtools-${SAMTOOLSVER}.tar.bz2 && \
+    rm samtools-${SAMTOOLSVER}.tar.bz2 && \
+    cd samtools-${SAMTOOLSVER} && \
+    ./configure && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf samtools-${SAMTOOLSVER} && \
+    mkdir /data
 
-WORKDIR /gatk
-RUN wget https://github.com/broadinstitute/gatk/releases/download/4.2.0.0/gatk-4.2.0.0.zip && \
-    unzip gatk-4.2.0.0.zip && \
-    rm gatk-4.2.0.0.zip
+ # Mise à jour du système et installation des dépendances nécessaires
+# install dependencies and clean up apt garbage
+# COPY --from=builder . /
 
-RUN apt-get install -y \
-    bwa \
-    samtools \
-    python3-pip
+# set perl locale settings
+ENV LC_ALL=C
 
-COPY REF.fasta /Users/mallorylecorre/Desktop/ProjetProg/REF.fasta
+# Création du répertoire "projet"
+RUN mkdir /projet
 
-COPY sorted.bam /Users/mallorylecorre/Desktop/ProjetProg/sorted.bam
+# Création du fichier "benzinzin.txt"
+RUN echo "Contenu du fichier benzinzin.txt" > /projet/benzinzin.txt
 
-WORKDIR /scripts
-RUN apt-get install -y git && \
-    git clone https://github.com/yguiberteau/Pipeline-pour-l-analyse-des-maladies-mitochondriales.git
+# Copier le fichier FASTQ dans le conteneur
+COPY IonXpress_011.fastq /data/IonXpress_011.fastq
 
-CMD ["python3", "/scripts/variant_call.py"]
+# Convertir le fichier FASTQ en fichier FASTA
+RUN samtools fastq -0 /projet/output.fasta /data/IonXpress_011.fastq
+
+
+# Instruction CMD pour exécuter une commande par défaut lorsque le conteneur est démarré
+CMD ["echo","ueue"]
+
