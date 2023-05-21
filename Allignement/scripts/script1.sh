@@ -1,2 +1,1 @@
-
-samtools fastq -0 /projet/output.fasta /data/IonXpress_011.fastq
+RUN samtools fastq -0 /projet/output.fasta /data/IonXpress_011.fastq
