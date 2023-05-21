@@ -1,24 +1,24 @@
 # Utilisation d'une image de base
-FROM ubuntu:latest
+FROM ubuntu
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
- libncurses5-dev \
- libbz2-dev \
- liblzma-dev \
- libcurl4-gnutls-dev \
- zlib1g-dev \
- libssl-dev \
- gcc \
- wget \
- make \
- perl \
- bzip2 \
- gnuplot \
- ca-certificates \
- gawk && \
- apt-get autoclean && rm -rf /var/lib/apt/lists/*
+    libncurses5-dev \
+    libbz2-dev \
+    liblzma-dev \
+    libcurl4-gnutls-dev \
+    zlib1g-dev \
+    libssl-dev \
+    gcc \
+    wget \
+    make \
+    perl \
+    bzip2 \
+    gnuplot \
+    ca-certificates \
+    gawk && \
+    apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
-# install samtools, make /data
+###### INSTALLATIONS DE SAMTOOLS ######
 ARG SAMTOOLSVER=1.13
 
 RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLSVER}/samtools-${SAMTOOLSVER}.tar.bz2 && \
@@ -32,26 +32,31 @@ RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLSVER}/s
     rm -rf samtools-${SAMTOOLSVER} && \
     mkdir /data
 
- # Mise à jour du système et installation des dépendances nécessaires
-# install dependencies and clean up apt garbage
-# COPY --from=builder . /
+RUN apt-get update && apt-get install -y git
 
-# set perl locale settings
-ENV LC_ALL=C
 
 # Création du répertoire "projet"
-RUN mkdir /projet
+RUN mkdir /github
+
+RUN mkdir /output 
+
+WORKDIR /github
+
+# Cloner le référentiel GitHub et copier son contenu dans le répertoire "projet"
+RUN git clone https://github.com/yguiberteau/Pipeline-pour-l-analyse-des-maladies-mitochondriales.git /tmp/repo && \
+    cp -r /tmp/repo/* /github && \
+    rm -rf /tmp/repo
 
 # Création du fichier "benzinzin.txt"
-RUN echo "Contenu du fichier benzinzin.txt" > /projet/benzinzin.txt
+RUN echo "Contenu du fichier benzinzin.txt" > /data/benzinzin.txt
+
 
 # Copier le fichier FASTQ dans le conteneur
 COPY IonXpress_011.fastq /data/IonXpress_011.fastq
 
-# Convertir le fichier FASTQ en fichier FASTA
-RUN samtools fastq -0 /projet/output.fasta /data/IonXpress_011.fastq
-
+# Exécuter le script script1.sh
 
 # Instruction CMD pour exécuter une commande par défaut lorsque le conteneur est démarré
-CMD ["echo","ueue"]
+CMD tail -f /dev/null
+
 
