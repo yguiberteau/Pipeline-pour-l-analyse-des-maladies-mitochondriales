@@ -1,5 +1,5 @@
 # Utilisation d'une image de base
-FROM ubuntu
+FROM ubuntu:latest
 
 ######################################
 ##### INSTALLATION DES LOGICIELS #####
@@ -23,6 +23,16 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     gawk && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
+
+###### INSTALLATION DE PYTHON2 ######
+# Mise à jour de la liste des paquets
+# RUN apt-get update
+
+# # Installation de Python 2
+# RUN apt-get install -y python2
+
+# # Configuration de Python 2 comme la version par défaut
+# RUN ln -s /usr/bin/python2 /usr/bin/python
 
 ###### INSTALLATION DE JAVA #######
 
@@ -64,35 +74,40 @@ RUN apt-get update && apt-get install -y git
 
 ###### INSTALLATION DE BWA #######
 
-RUN apt-get update && apt-get install -y bwa
+RUN apt-get update
 
+RUN apt-get install -y bwa
 
 ###### INSTALLATION DE PICARD TOOLS ######
-
-# Paquages et dependances 
-RUN apt-get update && apt-get install -y default-jre wget
-
 # Picard Tools
 RUN wget https://github.com/broadinstitute/picard/releases/download/2.25.6/picard.jar
 
-# Déplacer picard.jar vers le bon emplacement
 RUN mv picard.jar /usr/local/bin/picard.jar
-
 ENV PICARD_HOME /usr/local/bin
+
+# Add a script to run Picard Tools
+RUN echo '#!/bin/bash' >> /usr/local/bin/picard
+RUN echo 'java -jar /usr/local/bin/picard.jar "$@"' >> /usr/local/bin/picard
+RUN chmod +x /usr/local/bin/picard
+
+# Set PICARD_HOME and add /usr/local/bin to PATH
+ENV PATH $PATH:/usr/local/bin
 
 
 ###### INSTALLATION DE GATK ######
-
+# Installation des dépendances
 RUN apt-get update && apt-get install -y \
     openjdk-8-jdk \
     curl \
     unzip
 
-RUN curl -L -o gatk.zip "https://github.com/broadinstitute/gatk/releases/download/4.2.0.0/gatk-4.2.0.0.zip"
+# Téléchargement et installation de GATK
+RUN curl -L -o gatk.zip "https://github.com/broadinstitute/gatk/releases/download/4.2.0.0/gatk-4.2.0.0.zip" && \
+    unzip gatk.zip -d /gatk && \
+    rm gatk.zip
 
-RUN unzip gatk.zip && rm gatk.zip
-
-ENV PATH="/path/to/gatk:${PATH}"
+# Définition de la variable d'environnement PATH
+ENV PATH="/gatk/gatk-4.2.0.0:${PATH}"
 
 
 ############################################################
@@ -142,7 +157,6 @@ RUN chmod +x script2.sh
 # Execution du script
 RUN sh script2.sh
 
-
-
 #commande de fin du dockerfile 
 CMD tail -f /dev/null
+
