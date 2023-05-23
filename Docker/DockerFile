@@ -24,7 +24,29 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
 
+###### INSTALLATION DE JAVA #######
+
+RUN apt-get update && apt-get install -y wget gnupg2
+
+# Ajout du référentiel OpenJDK
+RUN echo "deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu bionic main" >> /etc/apt/sources.list.d/openjdk.list && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 86F44E2A
+
+# Mise à jour des paquets et installation de Java 64 bits
+RUN apt-get update && apt-get install -y openjdk-8-jdk
+
+# variables d'environnements 
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+ENV PATH="$JAVA_HOME/bin:${PATH}"
+
+# Vérification de l'installation de Java
+RUN java -version
+
+# Commande par défaut lorsque le conteneur est exécuté
+CMD ["java", "-version"]
+
 ###### INSTALLATIONS DE SAMTOOLS ######
+
 ARG SAMTOOLSVER=1.13
 
 RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLSVER}/samtools-${SAMTOOLSVER}.tar.bz2 && \
@@ -39,6 +61,10 @@ RUN wget https://github.com/samtools/samtools/releases/download/${SAMTOOLSVER}/s
     mkdir /data
 
 RUN apt-get update && apt-get install -y git
+
+###### INSTALLATION DE BWA #######
+
+RUN apt-get update && apt-get install -y bwa
 
 
 ###### INSTALLATION DE PICARD TOOLS ######
@@ -68,6 +94,7 @@ RUN unzip gatk.zip && rm gatk.zip
 
 ENV PATH="/path/to/gatk:${PATH}"
 
+
 ############################################################
 ####### CREATION DES RÉPERTOIRE ET CLONAGE DU GITHUB #######
 ############################################################
@@ -76,13 +103,13 @@ WORKDIR /
 # Creation du répertoire dans lequel sera présent les scripts du github
 RUN mkdir /github
 
-# Creation du répertoire output qui se sera transferer sur le répertoire de l'orinateur de l'utilisateur 
+# Creation du répertoire output qui se sera transfere sur le repertoire de l'orinateur de l'utilisateur 
 RUN mkdir /output 
 
 WORKDIR /github
 
 
-# Clone du référentiel GitHub, copie de son contenu dans le répertoire "github"
+# Clone du referentiel GitHub, copie de son contenu dans le repertoire "github"
 RUN git clone https://github.com/yguiberteau/Pipeline-pour-l-analyse-des-maladies-mitochondriales.git /tmp/repo && \
     cd /tmp/repo && \
     # il faut faire un pull afin d'avoir toujours la dernière verson du github
@@ -92,12 +119,18 @@ RUN git clone https://github.com/yguiberteau/Pipeline-pour-l-analyse-des-maladie
 
 RUN mkdir -p /.github/workflows
 
-# Création du fichier "benzinzin.txt"
+
+
+###############
+#### TEST #####
+###############
+
+# Creation du fichier "benzinzin.txt"
 RUN echo "Contenu du fichier benzinzin.txt" > /data/benzinzin.txt
 
 WORKDIR /
 
-# Copier le fichier FASTQ dans le conteneur
+# Copi le fichier FASTQ dans le conteneur
 COPY IonXpress_011.fastq /data/IonXpress_011.fastq
 
 # On se place dans le répertoire contenant le script à exécuter
@@ -109,12 +142,7 @@ RUN chmod +x script2.sh
 # Execution du script
 RUN sh script2.sh
 
-# Instruction CMD pour exécuter une commande par défaut lorsque le conteneur est démarré
+
+
+#commande de fin du dockerfile 
 CMD tail -f /dev/null
-
-# Exécuter le script script1.sh
-
-# Instruction CMD pour exécuter une commande par défaut lorsque le conteneur est démarré
-CMD tail -f /dev/null
-
-
