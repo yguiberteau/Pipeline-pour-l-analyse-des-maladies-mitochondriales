@@ -5,31 +5,31 @@ import os
 #Annotation par VEP
 def annotate_vcf(vcf_file):
     output_path = os.path.join(os.path.dirname(__file__), 'output_vep.csv')
-    print(f"Le fichier output sera créé à l'emplacement : {output_path}")
+    print(f"Le fichier output sera cree a l'emplacement : {output_path}")
     vep_command = f'/home/escros/project_prog/demo-app/anno/annotation/ensembl-vep/vep -i {vcf_file} --cache --dir_cache /home/escros/.vep --offline --fasta /home/escros/project_prog/demo-app/anno/annotation/REF.fasta --assembly GRCh38 --format vcf --vcf --pick --force_overwrite --no_escape --everything --output_file {output_path}' 
     subprocess.call(vep_command, shell=True)
     if os.path.exists(output_path):
-        print("Le fichier output a été créé avec succès!")
+        print("Le fichier output a ete cree avec succes!")
     else:
-        print("Erreur : le fichier output n'a pas été créé.")
+        print("Erreur : le fichier output n'a pas ete cree.")
     return output_path
 
-
+# Chargement des fichiers VCF et CSV
 def load_vcf(file_variant):
-    headers = []  # Variable pour stocker les en-têtes
-    data = []  # Variable pour stocker les données du fichier
+    headers = []  # Variable pour stocker les en-tetes
+    data = []  # Variable pour stocker les donnees du fichier
     with open(file_variant, 'r') as f:
         for line in f:
-            if not line.startswith('#'):  # Sortir de la boucle lorsqu'on atteint la ligne non commentée
-                data.append(line.strip().split('\t'))  # Ajouter les données à la liste
-            if line.startswith('#CHROM'):  # Identifier la ligne des en-têtes
-                headers = line.strip().split('\t')  # Extraire les en-têtes (à partir de la colonne 2)
-    
+            if not line.startswith('#'):  # Sortir de la boucle lorsqu'on atteint la ligne non commentee
+                data.append(line.strip().split('\t'))  # Ajouter les donnees a la liste
+            if line.startswith('#CHROM'):  # Identifier la ligne des en-tetes
+                headers = line.strip().split('\t')  # Extraire les en-tetes (a partir de la colonne 2)
     df = pd.DataFrame(data, columns=headers)
     return df
 
+# Separation des elements contenu dans la colonne INFO
 def parse_info_column(df):
-    parsed_info = []  # Liste de dictionnaires pour stocker les informations analysées
+    parsed_info = []  # Liste de dictionnaires pour stocker les informations analysees
     for index, row in df.iterrows():
         info = row['INFO']
         pairs = info.split(';')
@@ -48,31 +48,52 @@ def parse_info_column(df):
 def load_and_parse_vcf(file_path):
     vcf_data = load_vcf(file_path)
     vcf_data.rename(columns={'#CHROM': 'CHROM'}, inplace=True)
-    # Permet d'homogénéisé les dataframes, dans toutes les situations le chromosome sera nommé "M"
+    # Permet d'homogeneise les dataframes, dans toutes les situations le chromosome sera nomme "M"
     vcf_data['CHROM'] = 'M'
     return parse_info_column(vcf_data)
 
-# Appel à la fonction annotate_vcf, sortie : Variants annotés par VEP
+# Separation des elements contenu dans la colonne CSQ
+def separate_csq_column(df, column_name):
+    # Creer de nouvelles colonnes CSQ
+    csq_columns = [f'CSQ{i+1}' for i in range(df[column_name].str.count('\|').max() + 1)]
+    df[csq_columns] = df[column_name].str.split('\|', expand=True)
+    df = df.drop(column_name, axis=1)  # Supprimer la colonne CSQ d'origine
+    # Renommer les nouvelles colonnes avec les noms specifiques
+    # Il y a plus de colonnes que de noms de colonnes connus, les dernieres colonnes ne sont donc pas renommees, trouver l'information et adapter
+    new_column_names = ['Allele', 'Consequence', 'IMPACT', 'SYMBOL', 'Gene', 'Feature_type',
+                        'Feature', 'BIOTYPE', 'EXON', 'INTRON', 'HGVSc', 'HGVSp', 'cDNA_position',
+                        'CDS_position', 'Protein_position', 'Amino_acids', 'Codons',
+                        'Existing_variation', 'DISTANCE', 'STRAND', 'FLAGS', 'SYMBOL_SOURCE', 'HGNC_ID']
+    df = df.rename(columns=dict(zip(csq_columns, new_column_names)))
+    return df
+
+# Appel a la fonction annotate_vcf, sortie : Variants annotes par VEP
 output_path_vep = annotate_vcf('/home/escros/project_prog/demo-app/anno/annotation/TSVC_variants_IonXpress_011.vcf')
 csv_variant_VEP=load_and_parse_vcf(output_path_vep)
 
-# Chargement et fusion des données Mitomap
+# Chargement et fusion des donnees Mitomap
 vcf_variant_TSCV=load_and_parse_vcf('/home/escros/project_prog/demo-app/anno/annotation/TSVC_variants_IonXpress_011.vcf')
 vcf_variant_disease=load_and_parse_vcf('/home/escros/project_prog/demo-app/anno/annotation/Mitomap/disease.vcf')
 merged_data_Mitomap = pd.merge(vcf_variant_TSCV, vcf_variant_disease, on=['CHROM', 'POS', 'REF', 'ALT'], how='inner')
 
-# Sortie : Variants déjà annotés dans la littérature
+# Sortie : Variants deja annotes dans la litterature
 #output_file = '/home/escros/project_prog/demo-app/anno/annotation/output_mito.csv'
 #merged_data_Mitomap.to_csv(output_file, index=False)
 
-# Fusion des données Mitomap et VEP
+# Fusion des donnees Mitomap et VEP
 merged_data_anno = merged_data_Mitomap.set_index(['CHROM', 'POS', 'REF', 'ALT']).combine_first(csv_variant_VEP.set_index(['CHROM', 'POS', 'REF', 'ALT'])).reset_index()
 
-# Réorganisation des colonnes dans l'ordre souhaité
-ordering_columns = ['CHROM', 'POS', 'ID','REF', 'ALT','QUAL','FILTER','FORMAT','TYPE','Disease','DiseaseStatus']
+# Traitement de la colonne CSQ
+merged_data_anno['CSQ'] = merged_data_anno['CSQ'].astype(str).fillna('')
+merged_data_anno = separate_csq_column(merged_data_anno, 'CSQ')
+
+# Ne pas supprimer colonnes vides, sinon cree des beugs pour l'integration du document à la base de donnee. Il faut que les colonnes soient stables.
+
+# Reorganisation des colonnes dans l'ordre souhaite
+ordering_columns = ['CHROM', 'POS', 'ID','REF', 'ALT','QUAL','TYPE','Disease','DiseaseStatus','FILTER','FORMAT']
 desired_order =  ordering_columns + list(merged_data_anno.columns.drop(ordering_columns))
 merged_data_anno=merged_data_anno.reindex(columns=desired_order)
 
-# Sortie : Variants annotés par Mitomap et VEP
+# Sortie : Variants annotes par Mitomap et VEP
 output_file = '/home/escros/project_prog/demo-app/anno/annotation/annotation_VEP_Mitomap.csv'
 merged_data_anno.to_csv(output_file, index=False)
