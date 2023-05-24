@@ -1,0 +1,76 @@
+FROM ubuntu:latest
+
+############ INSTALLATION DE JAVA ############
+
+RUN apt-get update && apt-get install -y wget gnupg2
+
+# Ajout du référentiel OpenJDK
+RUN echo "deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu bionic main" >> /etc/apt/sources.list.d/openjdk.list && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 86F44E2A
+
+# Mise à jour des paquets et installation de Java 64 bits
+RUN apt-get update && apt-get install -y openjdk-8-jdk
+
+# variables d'environnements 
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+ENV PATH="$JAVA_HOME/bin:${PATH}"
+
+
+############ INSTALLATION HAPLOGREP ############
+
+# # RUN apt-get update
+
+# # # Installation de Python 2
+# RUN apt-get install -y python2
+
+# # # Configuration de Python 2 comme la version par défaut
+# RUN ln -s /usr/bin/python2 /usr/bin/python
+
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --fix-missing \
+    build-essential \
+    ca-certificates \
+    gcc \
+    git \
+    libpq-dev \
+    make \
+    python-pip \
+    python2.7 \
+    python2.7-dev \
+    samtools \
+    unzip \
+    && apt-get autoremove \
+    && apt-get clean
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    libgd-dev \
+    libgd-graph-perl \
+    libconfig-general-perl \
+    libmath-round-perl
+
+# Update the package repository
+RUN apt-get update
+
+# Install Perl
+RUN apt-get install -y perl
+
+# Update the package repository
+RUN apt-get update
+
+# Install Perl
+RUN apt-get install -y perl
+
+
+RUN curl -LO http://circos.ca/distribution/circos-0.69-9.tgz \
+    && tar -xzvf circos-0.69-9.tgz
+
+RUN apt-get install circos -y
+
+RUN apt-get update && apt-get install -y \
+    python2.7 \
+    python-pip
+
+apt install ncbi-blast+ is the version 2.2.28, we need >2.3.0 to work with eklipse
