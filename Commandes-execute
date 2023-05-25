@@ -1,0 +1,14 @@
+#Annotation
+#Création dossiers
+créer dossier data
+créer dossier output
+créer dossier scripts
+#Insertions docs
+Insertion dans data de disease.vcf obtenu sur le site de Mitomap
+Insertion dans data de REF.fasta fourni par le client
+Insertion dans output de TSVC_variants_IonXpress_011 (fichier obtenu à l'étape de variant calling)
+Insertion dans script du script anno_panda.py
+#Autres
+Avoir installer VEP en local dans le même dossier que les dossiers précédemment crée(il se nomme ensembl-vep)
+Avoir installer python3
+#Lancer depuis script la commande : python anno_python.py
